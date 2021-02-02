@@ -1,5 +1,4 @@
 #include <iostream>
-#include <vector>
 
 /*структура узла дерева*/
 template <typename T>
