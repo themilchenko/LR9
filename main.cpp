@@ -1,16 +1,14 @@
 #include <iostream>
 
-/*структура узла дерева*/
 template <typename T>
 struct Node
 {
-    Node* left;         /*указатель на левый элемент*/
-    Node* right;        /*указатель на правый элемент*/
-    T information;      /*значение элемента дерева*/
-    int height = 0;     /*высота поддерева*/
+    Node* left;
+    Node* right;
+    T information;
+    size_t height;
 };
 
-/*конструктор дерева*/
 template <typename T>
 void constructor(Node<T>* node, T inf)
 {
@@ -20,95 +18,102 @@ void constructor(Node<T>* node, T inf)
     node->height = 1;
 }
 
-/*подсчет высоты поддерева*/
 template <typename T>
-int height(Node<T>* tree)
+int height(Node<T>* node)
 {
-    if (!tree)                  /*если указатель поддерева указывает на пустоту*/
-        return 0;               /*возвращается ноль*/
-    else                        /*иначе*/
-        return tree->height;    /*возвращается высота*/
+    if (node == nullptr)
+        return 0;
+    else
+        return node->height;
 }
 
-/*разность высот правого и левого поддеревьев*/
 template <typename T>
-int delta(Node<T>* tree)
+void fix_height(Node<T>* node)
 {
-    return height(tree->right) - height(tree->left);
+    if (height(node->right) > height(node->left))
+        node->height = height(node->right) + 1;
+    else
+        node->height = height(node->left) + 1;
 }
 
-/*исправление высот узла после добавления / удаления элемента*/
 template <typename T>
-void fix_height(Node<T>* tree)
+Node<T>* small_rotate_left(Node<T>* up)
 {
-    if (height(tree->left) > height(tree->right))    /*если высота левого поддерева больше правого*/
-        tree->height = height(tree->left) + 1;       /*то высота самого узла будет являться сумма левого поддерева и единицы*/
-    else                                             /*иначе*/
-        tree->height = height(tree->right) + 1;      /*высота узла - сумма правого поддерева и единицы*/
+    Node<T>* down = up->right;
+    up->right = down->left;
+    down->left = up;
+    fix_height(up);
+    fix_height(down);
+    return down;
 }
 
-/*малый поворот вправо*/
 template <typename T>
-Node<T>* rotate_right(Node<T>* up)
+Node<T>* small_rotate_right(Node<T>* up)
 {
-    Node<T>* down = up->left;         /*ссылаемся на нижнее левое поддерево*/
-    up->left = down->right;           /*связываем верхушку дерева с правым поддеревом левого поддерева*/
-    down->right = up;                 /*нижний узел ссылается на бывшую верхушку*/
-    fix_height(up);                   /*исправляем высоту уже нижнего поддерева после поворота*/
-    fix_height(down);                 /*исправляем высоту врехнего поддерева*/
-    return down;                      /*возвращаем верхний узел*/
+    Node<T>* down = up->left;
+    up->left = down->right;
+    down->right = up;
+    fix_height(up);
+    fix_height(down);
+    return down;
 }
 
-/*малый поворот влево*/
 template <typename T>
-Node<T>* rotate_left(Node<T>* up)
+Node<T>* big_rotate_right(Node<T>* node)
 {
-    Node<T>* down = up->right;         /*ссылаемся на нижнее правое поддерево*/
-    up->right = down->left;            /*теперь связываем верхущку дерева с левым поддеревом праого поддерева*/
-    down->left = up;                   /*также нижний узел ссылается на бывшую верхушку*/
-    fix_height(up);                    /*исправляем высоту уже нижнего поддерева после поворота*/
-    fix_height(down);                  /*исправляем высоту верхнего поддерева*/
-    return down;                       /*возвращаем верхний узел*/
+    node->left = small_rotate_left(node->left);
+    node = small_rotate_right(node);
+    return node;
 }
 
-/*выполняет балансировку: повороты и исправления высот поддеревьев*/
+template <typename T>
+Node<T>* big_rotate_left(Node<T>* node)
+{
+    node->right = small_rotate_right(node->right);
+    node = small_rotate_left(node);
+    return node;
+}
+
 template <typename T>
 Node<T>* balance(Node<T>* node)
 {
-    fix_height(node);                                    /*исправление высоты поддерева*/
-    if (delta(node) == 2)                                /*если разница между праым и левым поддеревьями равна 2*/
-    {                                                    /*то заходим в условию для коррекции ситуации*/
-        if (delta(node->right) < 0)                      /*если разница поддеревьев у правого поддерева отрицательная (будет выполняться большой поворот влево)*/
-            node->right = rotate_right(node->right);     /*выполняем поворот вправо вокруг правого поддерева*/
-        return rotate_left(node);                        /*выполняем поворот влево*/
-    }
-    else if (delta(node) == -2)                          /*если разница -2*/
-    {
-        if (delta(node->left) > 0)                       /*разница положительна*/
-            node->left = rotate_left(node->left);        /*выполняем поворот влево*/
-        return rotate_right(node);                       /*поворачиваем вправо*/
-    }
-    return node;                                         /*возвращаем узел*/
+    fix_height(node);
+
+    if ((height(node->right) - height(node->left) == 2) && ((height(node->right->right) == height(node->right->left)) ||
+            (height(node->right->right) - height(node->right->left) == 1)))
+        node = small_rotate_left(node);
+
+    else if ((height(node->left) - height(node->right) == 2) && ((height(node->left->left) == height(node->left->right)) ||
+            (height(node->left->left) - height(node->left->right) == 1)))
+        node = small_rotate_right(node);
+
+    else if ((height(node->right) - height(node->left) == 2) && (height(node->right->left) > height(node->right->right)))
+        node = big_rotate_left(node);
+
+    else if ((height(node->left) - height(node->right) == 2) && (height(node->left->right) > height(node->left->left)))
+        node = big_rotate_right(node);
+
+    return node;
 }
 
-/*функция вставки элемента в дерево*/
 template <typename T>
-Node<T>* insert(Node<T>* node, T key)
+Node<T>* insert(Node<T>* node, T inf)
 {
-    if (!node)                                      /*если узел указывает на пустоту*/
-    { 
-        Node<T>* actual = new Node<T>;              /*создаем динамически структуру узла*/
-        constructor(actual, key);                   /*создаем элемент и добавляем его в дерево*/
-        return actual;                              /*возвращаем элемент*/
+    if (node == nullptr)
+    {
+        Node<T>* element = new Node<T>;
+        constructor(element, inf);
+        return element;
     }
-    else if (key < node->information)               /*если ключ меньше значения*/
-        node->left = insert(node->left, key);       /*идем влево*/
-    else if (key > node->information)               /*иначе*/
-        node->right = insert(node->right, key);     /*идем вправо*/
-    return balance(node);                           /*балансируем дерево после вставки*/
+    else if (node->information > inf)
+        node->left = insert(node->left, inf);
+    else
+        node->right = insert(node->right, inf);
+
+    node =  balance(node);
+    return node;
 }
 
-/*функция для нахождения максимального элемента в поддереве*/
 template <typename T>
 Node<T>* find_max(Node<T>* node)
 {
@@ -118,88 +123,77 @@ Node<T>* find_max(Node<T>* node)
         return find_max(node->right);
 }
 
-/*функция нахождения элемента, стоящего перед максимальным элементом левого поддерева*/
 template <typename T>
-Node<T>* previous_max(Node<T>* node, Node<T>* max)
+Node<T>* find_previous_max(Node<T>* node, Node<T>* max)
 {
-    if (node->right == max)                        /*если справа находится максимальная величина*/
-        return node;                               /*возвращаем узел, находящийся до максимальной величины*/
-    else if (node == max)                          /*если сам узел и есть максимальный*/
-        return node;                               /*также возвращаем его*/
-    else                                           /*иначе*/
-        return previous_max(node->right, max);     /*идем дальше*/
+    if (node->right == max || node == max)
+        return node;
+    else
+        return find_previous_max(node->right, max);
 }
 
-/*функция удаления элемента*/
 template <typename T>
-Node<T>* remove(Node<T>* node, T key)
+Node<T>* find_previous(Node<T>* node, T inf)
 {
-    Node<T>* previous = new Node<T>;                    /*создаю динамически элемент, чтобы запомнить элемент, находящийся перед удаляемым элементом*/
-    if (node == nullptr)                                /*если дошли до пустого элемента и не нашли нужный, значит его нет*/
-        return 0;                                       /*выходим и функции*/
-    if (key < node->information)                        /*если текущий элемент больше удаляемого*/
-    {
-        previous = node;                                /*запоминаем этот элемент*/
-        node->left = remove(node->left, key);           /*идем влево*/
-    }
-    else if (key > node->information)                   /*если текущий элемент меньше удаляемого*/
-    {
-        previous = node;                                /*запоминаем этот элемент*/
-        node->right = remove(node->right, key);         /*идем впрао*/
-    }
-    else if (key == node->information)                  /*если добрались до удаляемого элемента*/
-    {
-        Node<T>* left = node->left;                     /*для удобства обозначаем правый и левый элементы поддерева*/
-        Node<T>* right = node->right;
+    if (node->left->information == inf || node->right->information == inf)
+        return node;
+    else if (node->information > inf)
+        return find_previous(node->left, inf);
+    else if (node->information < inf)
+        return find_previous(node->right, inf);
+}
 
-        if (left == nullptr && right == nullptr)        /*если после удаленного элемента ничего нет*/
+
+template <typename T>
+Node<T>* remove(Node<T>* node, T inf)
+{
+
+    if (node != nullptr && node->information < inf)
+        node->right = remove(node->right, inf);
+    else if (node != nullptr && node->information > inf)
+        node->left = remove(node->left, inf);
+    else
+    {
+        if (node->left == nullptr && node->right == nullptr)
         {
             delete node;
             return nullptr;
         }
-        else if (left == nullptr && right != nullptr)   /*если слева ничего нет, а слева есть*/
+        else if (node->right == nullptr && node->left != nullptr)
         {
+            Node<T>* next = node->left;
             delete node;
-            previous->left = right;                     /*то связываем предыдущий от удаляемого элемента элемент с тем, что находится после*/
-            return balance(right);                      /*балансируем этот узел*/
+            return next;
         }
-        else if (left != nullptr && right == nullptr)   /*если справа ничего нет, а слева есть*/
+        else if (node->right != nullptr && node->left == nullptr)
         {
+            Node<T>* next = node->right;
             delete node;
-            previous->right = left;                     /*то связываем предыдущий от удаляемого элемента элемент с тем, что находится после*/
-            return balance(left);                       /*балансируем узел*/
+            return next;
         }
-        else                                            /*если и справа, и слева что-то есть*/
+        else
         {
-            Node<T>* max = find_max(left);                      /*ищем максисальный элемент в левом поддереве*/
-            Node<T>* prev_max= previous_max(left, max);         /*ищем значение, которое находится перед максимальным элементом*/
-            if (prev_max->information == node->information)     /*если предыдущий элемент и есть максимальный элемент в левом поддереве*/
+            Node<T>* max = find_max(node->left);
+            Node<T>* previous_max = find_previous_max(node->left, max);
+
+            if (previous_max == max)
             {
-                node->information = max->information;           /*заменяем удаляемый элемент на максимальный элемент*/
-                node->left = max->left;                         /*связываем элемент с тем, что находится после максимума*/
-                delete max;                                     /*удаляем максимальный элемент*/
-                balance(prev_max);                              /*балансируем*/
+                node->information = max->information;
+                node->left = max->left;
+                delete max;
+                return balance(node);
             }
             else
             {
-                node->information = max->information;           /*заменяем удаляемый элемент на максимальный*/
-                if (max->right != nullptr)                      /*если справа от максимального элемента что-то есть*/
-                { 
-                    prev_max->right = max->right;               /*связываем элемент с тем, что находится справа от масимального элемента*/
-                    prev_max->right->left = max->left;          /*следом идем то, что слева от макимального элемента*/
-                    delete max;                                 /*удаляем максимальный элемент*/
-                    balance(prev_max);                          /*балансируем узел*/
-                }
-                else                                            /*если мправа от максимального элемента ничего нет*/
-                {
-                    prev_max->right = max->left;                /*сразу связываем элемент с тем, что находится слева от максимума*/
-                    delete max;                                 /*удаляем максимальный узел*/
-                    balance(prev_max);                          /*балансируем узел*/
-                }
+                node->information = max->information;
+                previous_max->right = max->left;
+                delete max;
+                balance(previous_max);
             }
         }
+        return balance(node);
     }
-    return balance(node);                                       /*балансируем оставшиеся узлы*/
+    return balance(node);
 }
 
 /*функция для печати элементов дерева в вериткальном ввиде (элемент - высота элемента на дереве)*/
@@ -226,23 +220,22 @@ void destructor(Node<T>* node)
     }
 }
 
-Node<int>* tree = new Node<int>;
 
 int main()
 {
-
+    Node<int>* tree = new Node<int>;
     int command;
 
     do
     {
         std::cout << "What do you want to do? \n"
-            << "1. Construct AVL-tree \n"
-            << "2. Insert element \n"
-            << "3. Delete element \n"
-            << "4. See AVL-tree \n"
-            << "5. Delete tree \n"
-            << "6. Finish \n"
-            << "Enter the number of command to complete this: ";
+                  << "1. Construct AVL-tree \n"
+                  << "2. Insert element \n"
+                  << "3. Delete element \n"
+                  << "4. See AVL-tree \n"
+                  << "5. Delete tree \n"
+                  << "6. Finish \n"
+                  << "Enter the number of command to complete this: ";
 
         std::cin >> command;
 
@@ -276,12 +269,10 @@ int main()
             destructor(tree);
             std::cout << "AVL-tree is empty \n";
         }
-        
+
     } while (command != 6);
 
     std::cout << "That's all, goodbye!";
-
-
 
     return 0;
 }
