@@ -134,18 +134,6 @@ Node<T>* find_previous_max(Node<T>* node, Node<T>* max)
 }
 
 template <typename T>
-Node<T>* find_previous(Node<T>* node, T inf)
-{
-    if (node->left->information == inf || node->right->information == inf)
-        return node;
-    else if (node->information > inf)
-        return find_previous(node->left, inf);
-    else if (node->information < inf)
-        return find_previous(node->right, inf);
-}
-
-
-template <typename T>
 Node<T>* remove(Node<T>* node, T inf)
 {
 
