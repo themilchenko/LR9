@@ -1,4 +1,5 @@
 #include <iostream>
+#include <vector>
 
 template <typename T>
 struct Node
@@ -196,6 +197,12 @@ Node<T>* remove(Node<T>* node, T inf)
     return balance(node);
 }
 
+std::ostream& operator<<(std::ostream& output, std::pair<int, std::string>& element)
+{
+    output << element.first << ':' << element.second;
+    return output;
+}
+
 /*функция для печати элементов дерева в вериткальном ввиде (элемент - высота элемента на дереве)*/
 template <typename T>
 void print(Node<T>* node)
@@ -223,55 +230,120 @@ void destructor(Node<T>* node)
 
 int main()
 {
-    Node<int>* tree = new Node<int>;
     int command;
+    int type;
 
-    do
+    std::cout << "Enter '1' to work with integer values or '2' to work with pair of elements: ";
+    std::cin >> type;
+    if (type == 1)
     {
-        std::cout << "What do you want to do? \n"
-                  << "1. Construct AVL-tree \n"
-                  << "2. Insert element \n"
-                  << "3. Delete element \n"
-                  << "4. See AVL-tree \n"
-                  << "5. Delete tree \n"
-                  << "6. Finish \n"
-                  << "Enter the number of command to complete this: ";
+        Node<int>* tree = new Node<int>;
+        do
+            {
+            std::cout << "What do you want to do? \n"
+                      << "1. Construct AVL-tree \n"
+                      << "2. Insert element \n"
+                      << "3. Delete element \n"
+                      << "4. See AVL-tree \n"
+                      << "5. Delete tree \n"
+                      << "6. Finish \n"
+                      << "Enter the number of command to complete this: ";
 
-        std::cin >> command;
+            std::cin >> command;
 
-        if (command == 1)
+            if (command == 1)
+            {
+                int element;
+                std::cout << "The element you want to create on the AVL-tree: ";
+                std::cin >> element;
+                constructor(tree, element);
+                std::cout << "Constructing was finished successfully \n";
+            }
+            else if (command == 2) {
+                std::cout << "Enter the element you want to insert: ";
+                int element;
+                std::cin >> element;
+                tree = insert(tree, element);
+                std::cout << "Inserting was finished successfully \n";
+            }
+            else if (command == 3)
+            {
+                int element;
+                std::cout << "Enter the element you want to delete: ";
+                std::cin >> element;
+                remove(tree, element);
+                std::cout << "The element was deleted successfully.";
+            }
+            else if (command == 4)
+            {
+                print(tree);
+            }
+            else if (command == 5)
+            {
+                destructor(tree);
+                std::cout << "AVL-tree is empty \n";
+            }
+
+        } while (command != 6);
+    }
+    else
+    {
+        Node<std::pair<int, std::string>>* tree = new Node<std::pair<int, std::string>>;
+        do
         {
-            int element;
-            std::cout << "The element you want to create on the AVL-tree: ";
-            std::cin >> element;
-            constructor(tree, element);
-            std::cout << "Constructing was finished successfully \n";
-        }
-        else if (command == 2)
-        {
-            std::cout << "Enter the element you want to insert: ";
-            int element;
-            std::cin >> element;
-            tree = insert(tree, element);
-            std::cout << "Inserting was finished successfully \n";
-        }
-        else if (command == 3)
-        {
-            int element;
-            std::cout << "Enter the element you want to delete: ";
-            std::cin >> element;
-            remove(tree, element);
-            std::cout << "The element was deleted successfully.";
-        }
-        else if (command == 4)
-            print(tree);
-        else if (command == 5) {
-            destructor(tree);
-            std::cout << "AVL-tree is empty \n";
-        }
+            std::cout << "What do you want to do? \n"
+                      << "1. Construct AVL-tree \n"
+                      << "2. Insert element \n"
+                      << "3. Delete element \n"
+                      << "4. See AVL-tree \n"
+                      << "5. Delete tree \n"
+                      << "6. Finish \n"
+                      << "Enter the number of command to complete this: ";
 
-    } while (command != 6);
+            std::cin >> command;
 
+            if (command == 1)
+            {
+                std::pair<int, std::string> element;
+                std::cout << "The key you want to create on the AVL-tree: ";
+                std::cin >> element.first;
+                std::cout << "The value you want to create on the AVL-tree: ";
+                std::cin >> element.second;
+                constructor(tree, element);
+                std::cout << "Constructing was finished successfully \n";
+            }
+            else if (command == 2)
+            {
+                std::pair<int, std::string> element;
+                std::cout << "The key: ";
+                std::cin >> element.first;
+                std::cout << "The value: ";
+                std::cin >> element.second;
+                tree = insert(tree, element);
+                std::cout << "Inserting was finished successfully \n";
+            }
+            else if (command == 3)
+            {
+                std::pair<int, std::string> element;
+                std::cout << "Enter the key of element you want to delete: ";
+                std::cin >> element.first;
+                std::cout << "Enter the element you want to delete: ";
+                std::cin >> element.second;
+                remove(tree, element);
+                std::cout << "The element was deleted successfully.";
+            }
+            else if (command == 4)
+            {
+                print(tree);
+            }
+            else if (command == 5)
+            {
+                destructor(tree);
+                std::cout << "AVL-tree is empty \n";
+            }
+
+        } while (command != 6);
+    }
     std::cout << "That's all, goodbye!";
 
     return 0;
